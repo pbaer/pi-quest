@@ -1,0 +1,2055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pi Quest: A Ridiculously Circular Adventure</title>
+<link rel="preload" href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Comic+Neue:wght@400;700&display=swap" as="style" onload="this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Comic+Neue:wght@400;700&display=swap"></noscript>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --pi-purple: #6c3fa0;
+    --pi-pink: #e84393;
+    --pi-blue: #0984e3;
+    --pi-green: #00b894;
+    --pi-orange: #fdcb6e;
+    --pi-red: #d63031;
+    --bg-dark: #1a1a2e;
+    --bg-card: #16213e;
+    --text-light: #eee;
+  }
+
+  body {
+    font-family: 'Comic Neue', cursive, sans-serif;
+    background: var(--bg-dark);
+    color: var(--text-light);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Floating pi symbols background */
+  .bg-pis {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: -1; overflow: hidden;
+  }
+  .bg-pis span {
+    position: absolute;
+    font-size: 2rem;
+    opacity: 0.05;
+    animation: floatPi linear infinite;
+    color: var(--pi-pink);
+    pointer-events: none;
+  }
+  @keyframes floatPi {
+    0% { transform: translateY(110vh) rotate(0deg); }
+    100% { transform: translateY(-10vh) rotate(360deg); }
+  }
+
+  header {
+    text-align: center;
+    padding: 30px 20px 10px;
+    position: relative;
+    z-index: 1;
+  }
+  header h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 3rem;
+    background: linear-gradient(135deg, var(--pi-pink), var(--pi-purple), var(--pi-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+  }
+  header .subtitle {
+    font-size: 1.1rem;
+    color: #aaa;
+    margin-top: 5px;
+  }
+
+  /* Navigation */
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    padding: 20px;
+    position: relative;
+    z-index: 1;
+  }
+  nav button {
+    padding: 10px 18px;
+    border: 2px solid transparent;
+    border-radius: 25px;
+    background: var(--bg-card);
+    color: var(--text-light);
+    font-family: 'Comic Neue', cursive;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  nav button:hover { border-color: var(--pi-pink); transform: scale(1.05); }
+  nav button.active {
+    background: linear-gradient(135deg, var(--pi-pink), var(--pi-purple));
+    border-color: var(--pi-pink);
+  }
+
+  /* Sections */
+  .game-section {
+    display: none;
+    max-width: 900px;
+    margin: 0 auto 40px;
+    padding: 30px;
+    background: var(--bg-card);
+    border-radius: 20px;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  }
+  .game-section.active { display: block; }
+  .game-section h2 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+    color: var(--pi-orange);
+  }
+  .game-section h3 {
+    font-size: 1.2rem;
+    margin: 15px 0 8px;
+    color: var(--pi-pink);
+  }
+  .game-section p, .game-section li {
+    line-height: 1.7;
+    font-size: 1.05rem;
+  }
+
+  canvas {
+    border-radius: 12px;
+    display: block;
+    margin: 15px auto;
+    background: #0d1b2a;
+    max-width: 100%;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 25px;
+    font-family: 'Comic Neue', cursive;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: white;
+    margin: 5px;
+  }
+  .btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+  .btn-pink { background: var(--pi-pink); }
+  .btn-purple { background: var(--pi-purple); }
+  .btn-blue { background: var(--pi-blue); }
+  .btn-green { background: var(--pi-green); color: #1a1a2e; }
+  .btn-orange { background: var(--pi-orange); color: #1a1a2e; }
+  .btn-red { background: var(--pi-red); }
+
+  .score-badge {
+    display: inline-block;
+    background: var(--pi-purple);
+    padding: 5px 15px;
+    border-radius: 15px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin: 10px 0;
+  }
+
+  .fun-fact {
+    background: rgba(108, 63, 160, 0.2);
+    border-left: 4px solid var(--pi-purple);
+    padding: 12px 16px;
+    margin: 15px 0;
+    border-radius: 0 10px 10px 0;
+    font-style: italic;
+  }
+
+  .result-text {
+    font-size: 1.3rem;
+    font-weight: 700;
+    text-align: center;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 12px;
+  }
+  .result-good { background: rgba(0, 184, 148, 0.2); color: var(--pi-green); }
+  .result-ok { background: rgba(253, 203, 110, 0.2); color: var(--pi-orange); }
+  .result-bad { background: rgba(214, 48, 49, 0.2); color: var(--pi-red); }
+
+  /* Slider styling */
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: #2d3436;
+    outline: none;
+    margin: 10px 0;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--pi-pink);
+    cursor: pointer;
+  }
+
+  /* Quiz styling */
+  .quiz-option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 12px 20px;
+    margin: 8px 0;
+    border: 2px solid #2d3436;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.05);
+    color: var(--text-light);
+    font-family: 'Comic Neue', cursive;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .quiz-option:hover { border-color: var(--pi-blue); background: rgba(9, 132, 227, 0.1); }
+  .quiz-option.correct { border-color: var(--pi-green); background: rgba(0, 184, 148, 0.2); }
+  .quiz-option.wrong { border-color: var(--pi-red); background: rgba(214, 48, 49, 0.2); }
+  .quiz-option:disabled { cursor: default; opacity: 0.7; }
+
+  /* Digit display */
+  .digit-display {
+    font-family: 'Courier New', monospace;
+    font-size: 1.4rem;
+    line-height: 2;
+    word-break: break-all;
+    padding: 15px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 12px;
+    margin: 10px 0;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .digit-display .highlight {
+    background: var(--pi-pink);
+    color: white;
+    padding: 2px 4px;
+    border-radius: 4px;
+  }
+
+  /* Memory game input */
+  #memory-input {
+    width: 100%;
+    padding: 15px;
+    font-family: 'Courier New', monospace;
+    font-size: 1.5rem;
+    border: 3px solid var(--pi-purple);
+    border-radius: 12px;
+    background: rgba(0,0,0,0.3);
+    color: var(--text-light);
+    outline: none;
+    text-align: center;
+    letter-spacing: 3px;
+  }
+  #memory-input:focus { border-color: var(--pi-pink); }
+
+  .memory-feedback {
+    font-family: 'Courier New', monospace;
+    font-size: 1.3rem;
+    margin: 10px 0;
+    min-height: 40px;
+    letter-spacing: 2px;
+  }
+  .memory-feedback .correct-char { color: var(--pi-green); }
+  .memory-feedback .wrong-char { color: var(--pi-red); text-decoration: underline; }
+
+  /* Race lanes */
+  .race-container { margin: 15px 0; }
+  .race-lane {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    gap: 10px;
+  }
+  .race-label {
+    width: 140px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+  .race-track {
+    flex: 1;
+    height: 30px;
+    background: #2d3436;
+    border-radius: 15px;
+    position: relative;
+    overflow: hidden;
+  }
+  .race-bar {
+    height: 100%;
+    border-radius: 15px;
+    transition: width 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    min-width: 40px;
+  }
+  .race-value {
+    width: 160px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .controls-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+    margin: 15px 0;
+  }
+
+  /* Mascot */
+  .mascot {
+    font-size: 4rem;
+    text-align: center;
+    margin: 10px 0;
+    animation: bounce 2s ease-in-out infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .speech-bubble {
+    background: rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 15px 20px;
+    margin: 10px auto;
+    max-width: 600px;
+    text-align: center;
+    position: relative;
+    font-size: 1.1rem;
+  }
+  .speech-bubble::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    margin-left: -10px;
+    border: 10px solid transparent;
+    border-bottom-color: rgba(255,255,255,0.1);
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    header h1 { font-size: 2rem; }
+    .game-section { margin: 0 10px 30px; padding: 20px; }
+    nav button { font-size: 0.8rem; padding: 8px 12px; }
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin: 15px 0;
+  }
+  .stat-card {
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+  }
+  .stat-card .stat-num {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.8rem;
+    color: var(--pi-pink);
+  }
+  .stat-card .stat-label {
+    font-size: 0.85rem;
+    color: #aaa;
+    margin-top: 5px;
+  }
+
+  .timeline-item {
+    display: flex;
+    gap: 15px;
+    margin: 15px 0;
+    padding: 15px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.03);
+    border-left: 4px solid var(--pi-blue);
+  }
+  .timeline-year {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.2rem;
+    color: var(--pi-blue);
+    white-space: nowrap;
+  }
+
+  /* Search input */
+  #pattern-search {
+    width: 100%;
+    padding: 12px;
+    font-family: 'Courier New', monospace;
+    font-size: 1.2rem;
+    border: 2px solid var(--pi-blue);
+    border-radius: 12px;
+    background: rgba(0,0,0,0.3);
+    color: var(--text-light);
+    outline: none;
+    text-align: center;
+  }
+
+  .formula-box {
+    background: rgba(0,0,0,0.4);
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin: 10px 0;
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .tab-row {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 10px 10px 0 0;
+    background: rgba(255,255,255,0.05);
+    color: #aaa;
+    font-family: 'Comic Neue', cursive;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tab-btn.active { background: rgba(255,255,255,0.15); color: white; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Pi Quest</h1>
+  <div class="subtitle">A Ridiculously Circular Adventure</div>
+</header>
+
+<nav id="mainNav">
+  <button class="active" data-section="welcome">Home</button>
+  <button data-section="what-is-pi">What IS Pi?</button>
+  <button data-section="history">Time Machine</button>
+  <button data-section="polygon">Squeeze It!</button>
+  <button data-section="montecarlo">Dart Circus</button>
+  <button data-section="race">Formula Race</button>
+  <button data-section="patterns">Digit Detective</button>
+  <button data-section="memory">Memory Dojo</button>
+</nav>
+
+<!-- ============== WELCOME ============== -->
+<section class="game-section active" id="sec-welcome">
+  <div class="mascot" id="piMascot"></div>
+  <div class="speech-bubble" id="welcomeSpeech">
+    Welcome, brave circle enthusiast! I'm <b>Captain Pi-rate</b>, your guide through the
+    wonderfully irrational world of Pi! Pick a challenge above, and let's get rolling...
+    <i>get it? Rolling? Because circles?</i> ...I'll see myself out.
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-num">~3.14159</div>
+      <div class="stat-label">The Number Itself</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">4000+</div>
+      <div class="stat-label">Years of History</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">105 Trillion</div>
+      <div class="stat-label">Known Digits</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">Infinite</div>
+      <div class="stat-label">Non-Repeating</div>
+    </div>
+  </div>
+
+  <div class="fun-fact">
+    <b>Fun Fact:</b> If you wrote Pi's digits in normal-sized font, 1 trillion digits would stretch
+    from New York to... well, past the Moon. Pi doesn't mess around.
+  </div>
+
+  <div style="text-align:center; margin-top: 20px;">
+    <button class="btn btn-pink" onclick="showSection('what-is-pi')">Start Your Quest!</button>
+  </div>
+</section>
+
+<!-- ============== WHAT IS PI ============== -->
+<section class="game-section" id="sec-what-is-pi">
+  <h2>What IS Pi, Anyway?</h2>
+  <p>Pi is the ratio of a circle's <b>circumference</b> (the distance around) to its <b>diameter</b>
+     (the distance across). No matter how big or small the circle, this ratio is always the same!</p>
+
+  <h3>Try It Yourself: Roll the Circle!</h3>
+  <p>Drag the slider to change the circle's size. Watch how the circumference and diameter change,
+     but their ratio stays stubbornly constant.</p>
+
+  <canvas id="circleCanvas" width="800" height="350"></canvas>
+
+  <div class="controls-row">
+    <span>Tiny</span>
+    <input type="range" id="circleRadius" min="30" max="140" value="80" style="flex:1">
+    <span>Huge</span>
+  </div>
+
+  <div class="stats-grid" id="circleStats">
+    <div class="stat-card">
+      <div class="stat-num" id="statDiam">160.0</div>
+      <div class="stat-label">Diameter</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statCirc">502.7</div>
+      <div class="stat-label">Circumference</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statRatio">3.14159...</div>
+      <div class="stat-label">C / D = ???</div>
+    </div>
+  </div>
+
+  <div class="fun-fact">
+    <b>Mind-blowing:</b> Pi is <b>irrational</b> - its digits go on forever and never repeat.
+    It's also <b>transcendental</b>, which sounds like a yoga class but actually means it can't
+    be the solution to any polynomial equation with rational coefficients. Pi is basically
+    the rebellious teenager of numbers.
+  </div>
+
+  <h3>Quick Quiz!</h3>
+  <p id="whatQuizQ">What does Pi represent?</p>
+  <div id="whatQuizOptions"></div>
+  <div id="whatQuizResult"></div>
+</section>
+
+<!-- ============== HISTORY / TIME MACHINE ============== -->
+<section class="game-section" id="sec-history">
+  <h2>Pi's Time Machine</h2>
+  <p>Hop in the time machine and learn how humans have been obsessed with this number for millennia!
+     Then test your knowledge with a trivia challenge.</p>
+
+  <div class="tab-row">
+    <button class="tab-btn active" onclick="showHistoryTab('timeline')">Timeline</button>
+    <button class="tab-btn" onclick="showHistoryTab('quiz')">Trivia Challenge</button>
+  </div>
+
+  <div id="historyTimeline">
+    <div class="timeline-item">
+      <div class="timeline-year">~1900 BC</div>
+      <div>The <b>Babylonians</b> estimated Pi as 3.125 (using 25/8). Not bad for people who hadn't invented pants yet!</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">~1650 BC</div>
+      <div>The <b>Rhind Papyrus</b> from Egypt gives Pi as roughly 3.1605. Ancient Egyptian math homework found!</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">~250 BC</div>
+      <div><b>Archimedes</b> trapped Pi between 3.1408 and 3.1429 by inscribing and circumscribing polygons around a circle. He used 96-sided polygons! This was the first rigorous algorithm.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">~480 AD</div>
+      <div><b>Zu Chongzhi</b> (China) found Pi accurate to 7 decimal places: 3.1415926. This record stood for about 800 years!</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">1706</div>
+      <div><b>William Jones</b> first used the Greek letter "pi" to represent the constant. Before that, people had to say "that circle-y ratio thing."</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">1737</div>
+      <div><b>Euler</b> popularized the use of the symbol after Jones introduced it. When Euler endorses your notation, it sticks.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">1761</div>
+      <div><b>Johann Lambert</b> proved Pi is <b>irrational</b> - the digits never repeat. Math dropped the mic.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">1882</div>
+      <div><b>Ferdinand von Lindemann</b> proved Pi is <b>transcendental</b>, finally proving you can't square the circle with compass and straightedge. Sorry, ancient Greeks!</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">1988</div>
+      <div>The <b>Chudnovsky brothers</b> computed Pi to over 1 billion digits using their own formula... in their New York apartment. Extreme nerd goals.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">2024</div>
+      <div>Pi has been computed to over <b>105 trillion digits</b>. Nobody needs this many digits (40 would suffice for the observable universe), but humans gonna human.</div>
+    </div>
+  </div>
+
+  <div id="historyQuiz" style="display:none">
+    <div id="hQuizArea"></div>
+    <div class="score-badge" id="hQuizScore">Score: 0 / 0</div>
+  </div>
+</section>
+
+<!-- ============== POLYGON SQUEEZE ============== -->
+<section class="game-section" id="sec-polygon">
+  <h2>Archimedes' Polygon Squeeze</h2>
+  <p>Archimedes figured out you can estimate Pi by squeezing a circle between two polygons
+     - one inside (inscribed) and one outside (circumscribed). More sides = better estimate!</p>
+
+  <canvas id="polyCanvas" width="800" height="450"></canvas>
+
+  <div class="controls-row">
+    <span>3 sides</span>
+    <input type="range" id="polySides" min="3" max="200" value="6" style="flex:1">
+    <span>200 sides</span>
+    <button class="btn btn-pink" onclick="animatePolygon()">Auto-Squeeze!</button>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-num" id="polyCount">6</div>
+      <div class="stat-label">Polygon Sides</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="polyInner">3.0000</div>
+      <div class="stat-label">Inner (too small)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="polyOuter">6.0000</div>
+      <div class="stat-label">Outer (too big)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="polyAvg">4.5000</div>
+      <div class="stat-label">Average Estimate</div>
+    </div>
+  </div>
+
+  <div class="fun-fact">
+    <b>Historical Note:</b> Archimedes used a 96-sided polygon to prove 3 + 10/71 < Pi < 3 + 1/7.
+    Move the slider to 96 and see how close you get! The man was a legend with no calculator.
+  </div>
+</section>
+
+<!-- ============== MONTE CARLO DART CIRCUS ============== -->
+<section class="game-section" id="sec-montecarlo">
+  <h2>The Monte Carlo Dart Circus</h2>
+  <p>Here's a wild idea: you can estimate Pi by randomly throwing darts at a square with a circle
+     inscribed in it! The ratio of darts inside the circle to total darts approximates Pi/4.</p>
+
+  <p><b>Why?</b> Area of circle = Pi*r^2. Area of square = (2r)^2 = 4r^2. Ratio = Pi/4!</p>
+
+  <canvas id="dartCanvas" width="500" height="500"></canvas>
+
+  <div class="controls-row" style="justify-content:center; flex-wrap:wrap;">
+    <button class="btn btn-pink" onclick="throwDarts(1)">Throw 1</button>
+    <button class="btn btn-purple" onclick="throwDarts(10)">Throw 10</button>
+    <button class="btn btn-blue" onclick="throwDarts(100)">Throw 100</button>
+    <button class="btn btn-green" onclick="throwDarts(1000)">Throw 1,000</button>
+    <button class="btn btn-orange" onclick="throwDarts(10000)">YOLO 10,000</button>
+    <button class="btn btn-red" onclick="resetDarts()">Reset</button>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-num" id="dartTotal">0</div>
+      <div class="stat-label">Total Darts</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="dartInside">0</div>
+      <div class="stat-label">Inside Circle</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="dartPi">-</div>
+      <div class="stat-label">Pi Estimate</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="dartError">-</div>
+      <div class="stat-label">Error</div>
+    </div>
+  </div>
+
+  <div class="fun-fact">
+    <b>Fun Fact:</b> This "Monte Carlo method" is named after the famous casino in Monaco.
+    Mathematicians love gambling metaphors. You'll need about 100,000 darts to get
+    even 2 decimal places right. This method is fun but hilariously inefficient!
+  </div>
+</section>
+
+<!-- ============== FORMULA RACE ============== -->
+<section class="game-section" id="sec-race">
+  <h2>The Great Pi Formula Race</h2>
+
+  <div class="tab-row">
+    <button class="tab-btn active" onclick="showRaceTab('race')">Formula Race</button>
+    <button class="tab-btn" onclick="showRaceTab('chudnovsky')">Chudnovsky Deep Dive</button>
+  </div>
+
+  <div id="raceMain">
+  <p>Different formulas converge to Pi at wildly different speeds. Watch them race!
+     Each "step" adds one more term of the series.</p>
+
+  <div class="formula-box">
+    <b>Leibniz:</b> Pi/4 = 1 - 1/3 + 1/5 - 1/7 + ... <span style="color:var(--pi-red)">(painfully slow)</span>
+  </div>
+  <div class="formula-box">
+    <b>Nilakantha:</b> Pi = 3 + 4/(2*3*4) - 4/(4*5*6) + ... <span style="color:var(--pi-orange)">(decent)</span>
+  </div>
+  <div class="formula-box">
+    <b>Machin:</b> Pi/4 = 4*arctan(1/5) - arctan(1/239) <span style="color:var(--pi-green)">(fast!)</span>
+  </div>
+  <div class="formula-box">
+    <b>Chudnovsky:</b> 1/Pi = 12 * sum(...) <span style="color:var(--pi-blue)">(ludicrous speed)</span>
+  </div>
+
+  <div class="race-container" id="raceContainer">
+    <div class="race-lane">
+      <div class="race-label" style="color:var(--pi-red)">Leibniz</div>
+      <div class="race-track"><div class="race-bar" id="raceBar0" style="width:0%;background:var(--pi-red)"></div></div>
+      <div class="race-value" id="raceVal0">-</div>
+    </div>
+    <div class="race-lane">
+      <div class="race-label" style="color:var(--pi-orange)">Nilakantha</div>
+      <div class="race-track"><div class="race-bar" id="raceBar1" style="width:0%;background:var(--pi-orange)"></div></div>
+      <div class="race-value" id="raceVal1">-</div>
+    </div>
+    <div class="race-lane">
+      <div class="race-label" style="color:var(--pi-green)">Machin-like</div>
+      <div class="race-track"><div class="race-bar" id="raceBar2" style="width:0%;background:var(--pi-green)"></div></div>
+      <div class="race-value" id="raceVal2">-</div>
+    </div>
+    <div class="race-lane">
+      <div class="race-label" style="color:var(--pi-blue)">Chudnovsky</div>
+      <div class="race-track"><div class="race-bar" id="raceBar3" style="width:0%;background:var(--pi-blue)"></div></div>
+      <div class="race-value" id="raceVal3">-</div>
+    </div>
+  </div>
+
+  <div class="controls-row" style="justify-content:center">
+    <button class="btn btn-pink" onclick="startRace()">Start Race!</button>
+    <button class="btn btn-purple" onclick="stepRace()">Step +1</button>
+    <button class="btn btn-red" onclick="resetRace()">Reset</button>
+    <span class="score-badge" id="raceStep">Step: 0</span>
+  </div>
+
+  <div class="fun-fact" id="raceFunFact">
+    <b>Spoiler:</b> The Chudnovsky formula adds about 14 digits of accuracy per term.
+    It was used to set many world records. The Leibniz series... bless its heart, it tries.
+  </div>
+  </div><!-- end raceMain -->
+
+  <div id="raceChudnovsky" style="display:none">
+    <h3>The Chudnovsky Algorithm: Pi's Final Boss</h3>
+
+    <p>The Chudnovsky formula is the heavyweight champion of Pi computation. Almost every
+       modern world record for computing Pi has used some variant of it. Here's the full beast:</p>
+
+    <div class="formula-box" style="font-size:0.95rem;line-height:1.8">
+      1/Pi = 12 &middot; <b>&Sigma;</b><sub>k=0..inf</sub>
+      (-1)<sup>k</sup> &middot; (6k)! &middot; (13591409 + 545140134k)
+      &frasl; ( (3k)! &middot; (k!)<sup>3</sup> &middot; 640320<sup>3k+3/2</sup> )
+    </div>
+
+    <h3>Why Is It So Fast?</h3>
+    <p>Each single term of this series gives you about <b>14.18 new correct digits</b> of Pi.
+       Compare that to Leibniz, where you need about 5 billion terms just to get 10 digits right.
+       With Chudnovsky, 10 digits takes... <i>one term</i>.</p>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-num">~14</div>
+        <div class="stat-label">Digits Per Term</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">71</div>
+        <div class="stat-label">Terms for 1,000 Digits</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">~7,000</div>
+        <div class="stat-label">Terms for 100K Digits</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">1</div>
+        <div class="stat-label">NYC Apartment Used</div>
+      </div>
+    </div>
+
+    <h3>The Origin Story</h3>
+    <p>Brothers <b>David and Gregory Chudnovsky</b> developed this formula in 1988. They were
+       mathematicians working out of Gregory's apartment in New York City, where they built a
+       custom supercomputer from mail-order parts. Using their formula, they computed Pi to over
+       <b>1 billion digits</b> - a world record at the time.</p>
+
+    <p>Their formula is actually a refinement of work by the legendary Indian mathematician
+       <b>Srinivasa Ramanujan</b>, who in 1914 discovered a family of rapidly converging series for Pi.
+       Ramanujan's original series gave ~8 digits per term. The Chudnovsky brothers supercharged it.</p>
+
+    <h3>Where Do Those Magic Numbers Come From?</h3>
+    <p>The constants 640320, 13591409, and 545140134 look like someone smashed a keyboard,
+       but they actually come from deep number theory:</p>
+    <ul style="margin: 10px 0 10px 20px;">
+      <li style="margin:8px 0"><b>640320</b> is related to the <i>j-invariant</i> of an elliptic curve with
+          complex multiplication. Specifically, 640320<sup>3</sup> = 262537412640768000, and the
+          fact that e<sup>Pi*sqrt(163)</sup> is <i>almost</i> an integer (off by ~10<sup>-12</sup>)
+          is deeply connected to this value.</li>
+      <li style="margin:8px 0"><b>163</b> is a <i>Heegner number</i> - one of only 9 special numbers where
+          imaginary quadratic fields have unique factorization. The largest Heegner number gives
+          the fastest convergence, and 163 is the biggest one. Lucky us!</li>
+      <li style="margin:8px 0"><b>13591409</b> and <b>545140134</b> are derived from modular forms and the
+          arithmetic of the same elliptic curve. They determine exactly where the series "aims" at Pi.</li>
+    </ul>
+
+    <h3>How It's Actually Implemented</h3>
+    <p>In practice, nobody evaluates the formula naively term-by-term (those factorials get
+       enormous). Instead, a technique called <b>binary splitting</b> is used:</p>
+    <ol style="margin: 10px 0 10px 20px;">
+      <li style="margin:8px 0">Split the summation range [0, N) in half recursively</li>
+      <li style="margin:8px 0">At each level, combine partial products instead of computing full factorials</li>
+      <li style="margin:8px 0">Use FFT-based multiplication for the huge numbers (millions of digits)</li>
+      <li style="margin:8px 0">At the end, do one giant division to get the final result</li>
+    </ol>
+    <p>This reduces the complexity from O(N<sup>2</sup>) to O(N log<sup>2</sup>N &middot; log(log N)),
+       which matters when N is in the trillions.</p>
+
+    <div class="fun-fact">
+      <b>Fun Fact:</b> Google used the Chudnovsky algorithm (with y-cruncher software) to compute
+      Pi to 105 trillion digits in 2024. The computation took about 75 days and required
+      ~1 petabyte of storage. The Chudnovsky brothers' apartment probably couldn't handle that.
+    </div>
+
+    <h3>Interactive: See How Fast It Converges</h3>
+    <p>Click to step through the Chudnovsky series and watch it lock onto Pi almost immediately:</p>
+    <div id="chudnovskySteps"></div>
+    <div class="controls-row" style="justify-content:center">
+      <button class="btn btn-blue" onclick="stepChudnovskyDemo()">Add Term</button>
+      <button class="btn btn-red" onclick="resetChudnovskyDemo()">Reset</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============== DIGIT DETECTIVE ============== -->
+<section class="game-section" id="sec-patterns">
+  <h2>Digit Detective</h2>
+  <p>Pi's digits look random, but there are some wild patterns hiding in there.
+     Let's investigate!</p>
+
+  <div class="tab-row">
+    <button class="tab-btn active" onclick="showPatternTab('search')">Pattern Search</button>
+    <button class="tab-btn" onclick="showPatternTab('feynman')">Feynman Point</button>
+    <button class="tab-btn" onclick="showPatternTab('frequency')">Digit Frequency</button>
+    <button class="tab-btn" onclick="showPatternTab('birthday')">Birthday Finder</button>
+  </div>
+
+  <div id="patternSearch">
+    <h3>Search for Any Sequence in Pi</h3>
+    <p>Type any number and see where it first appears in Pi's digits.
+       We compute digits on the fly - if your sequence isn't found, we'll keep
+       computing deeper!</p>
+    <input type="text" id="pattern-search" placeholder="Type digits... e.g. 1234" maxlength="10" oninput="searchInPi()">
+    <div id="searchResult" style="margin-top:10px"></div>
+    <div id="searchStatus" style="margin-top:5px"></div>
+    <div class="digit-display" id="searchDisplay" style="display:none"></div>
+  </div>
+
+  <div id="patternFeynman" style="display:none">
+    <h3>The Feynman Point</h3>
+    <p>Starting at position <b>762</b>, there are six 9s in a row: <b>...999999...</b></p>
+    <p>Physicist Richard Feynman once joked he wanted to memorize Pi up to that point so he could
+       recite it and end with "nine nine nine nine nine nine and so on," implying Pi is rational.
+       Maximum troll energy.</p>
+    <div class="digit-display" id="feynmanDisplay"></div>
+  </div>
+
+  <div id="patternFrequency" style="display:none">
+    <h3>Digit Frequency Analysis</h3>
+    <p>If Pi is "normal" (widely believed but unproven!), each digit 0-9 should appear
+       roughly 10% of the time. Let's check our computed digits:</p>
+    <canvas id="freqCanvas" width="800" height="300"></canvas>
+    <div id="freqVerdict" style="margin-top:10px"></div>
+  </div>
+
+  <div id="patternBirthday" style="display:none">
+    <h3>Find Your Birthday in Pi!</h3>
+    <p>Enter your birthday (MMDDYY or MMDDYYYY) and find out where you appear in Pi:</p>
+    <input type="text" id="birthdayInput" placeholder="e.g. 031490 or 03141592" maxlength="8"
+           oninput="searchBirthday()" style="width:100%;padding:12px;font-family:'Courier New',monospace;font-size:1.2rem;border:2px solid var(--pi-blue);border-radius:12px;background:rgba(0,0,0,0.3);color:var(--text-light);outline:none;text-align:center;">
+    <div id="birthdayResult" style="margin-top:10px"></div>
+  </div>
+</section>
+
+<!-- ============== MEMORY DOJO ============== -->
+<section class="game-section" id="sec-memory">
+  <h2>Pi Memory Dojo</h2>
+  <p>How many digits of Pi can you memorize? The world record is <b>70,030 digits</b>,
+     held by Suresh Kumar Sharma. Let's see how you stack up!</p>
+
+  <div class="tab-row">
+    <button class="tab-btn active" onclick="showMemoryTab('practice')">Practice</button>
+    <button class="tab-btn" onclick="showMemoryTab('challenge')">Speed Challenge</button>
+    <button class="tab-btn" onclick="showMemoryTab('leaderboard')">Hall of Fame</button>
+  </div>
+
+  <div id="memoryPractice">
+    <h3>Study Mode</h3>
+    <p>Memorize these digits, then switch to the challenge tab to test yourself!</p>
+    <div class="controls-row">
+      <span>Show:</span>
+      <button class="btn btn-pink" onclick="showPiDigits(20)">20 digits</button>
+      <button class="btn btn-purple" onclick="showPiDigits(50)">50 digits</button>
+      <button class="btn btn-blue" onclick="showPiDigits(100)">100 digits</button>
+    </div>
+    <div class="digit-display" id="practiceDisplay">3.14159265358979323846</div>
+
+    <div class="fun-fact">
+      <b>Memory Tip:</b> Break Pi into chunks! "3.14159 | 26535 | 89793 | 23846" -
+      try making a silly story with each group. "3 pies, 14 cats, 159 penguins..."
+    </div>
+  </div>
+
+  <div id="memoryChallenge" style="display:none">
+    <h3>Type Pi From Memory!</h3>
+    <p>Start typing digits of Pi after "3." - we'll track how far you get!</p>
+    <div style="font-size:1.5rem; margin:10px 0; font-family:'Courier New',monospace;">
+      3.<input type="text" id="memory-input" placeholder="type digits here..." autocomplete="off">
+    </div>
+    <div class="memory-feedback" id="memoryFeedback"></div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-num" id="memCorrect">0</div>
+        <div class="stat-label">Correct Digits</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="memRank">Newbie</div>
+        <div class="stat-label">Your Rank</div>
+      </div>
+    </div>
+    <button class="btn btn-red" onclick="resetMemory()">Start Over</button>
+  </div>
+
+  <div id="memoryLeaderboard" style="display:none">
+    <h3>Hall of Fame: Pi Memorizers</h3>
+    <div class="timeline-item">
+      <div class="timeline-year">70,030</div>
+      <div><b>Suresh Kumar Sharma</b> (2015, India) - Current world record. Took 17 hours to recite!</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">67,890</div>
+      <div><b>Lu Chao</b> (2005, China) - Previous record holder.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">42,195</div>
+      <div><b>Hiroyuki Goto</b> (1995, Japan) - Held the record for 10 years.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">100</div>
+      <div><b>Impressive Party Trick</b> - You'd definitely impress people at parties.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">10</div>
+      <div><b>Not Bad!</b> - You know more Pi than most humans who have ever lived.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year" id="memYourScore">?</div>
+      <div><b>You!</b> - <span id="memYourComment">Take the challenge to see where you rank!</span></div>
+    </div>
+  </div>
+</section>
+
+<footer style="text-align:center; padding:30px; color:#555; position:relative; z-index:1;">
+  Made with irrational love for Pi | 3.14159265358979323846...
+</footer>
+
+<!-- Floating background pis - placed last to never block interaction -->
+<div class="bg-pis" id="bgPis"></div>
+
+<script>
+// ========================
+// PI COMPUTATION ENGINE
+// ========================
+// Start with a small hardcoded seed for instant use, then compute more via Web Worker
+let PI_DIGITS = "1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821480865132823066470938446095505822317253594081284811174502841027019385211055596446229489549303819644288109756659334461284756482337867831652712019091456485669234603486104543266482133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488204665213841469519415116094330572703657595919530921861173819326117931051185480744623799627495673518857527248912279381830119491298336733624406566430860213949463952247371907021798609437027705392171762931767523846748184676694051320005681271452635608277857713427577896091736371787214684409012249534301465495853710507922796892589235420199561121290219608640344181598136297747713099605187072113499999983729780499510597317328160963185950244594553469083026425223082533446850352619311881710100031378387528865875332083814206171776691473035982534904287554687311595628638823537875937519577818577805321712268066130019278766111959092164201989380952572010654858632788659361533818279682303019520353018529689957736225994138912497217752834791315155748572424541506959508295331168617278558890750983817546374649393192550604009277016711390098488240128583616035637076601047101819429555961989467678374494482553797747268471040475346462080466842590694912933136770289891521047521620569660240580381501935112534824300355876402474964732639141992726042699227967823547816360093417216412199245863150302861829745557067498385054945885869269956909272107975093029553211653449872027559602364806654991198818347977535663698074265425278625518184175746728909777727938000816470600161452491921732172147723501414419735685481613611573525521334757418494684385233909739414333454776241686251898356948556209921922218427255025425688767179049460165346680498862723279178608578438382796797668145410095388378636095068006422512520511739298489608412848862694560424196528502221066118630674427862203919494504712371378696095636437191728746776465757396241389086583264599581339047802759009946576407895126946839835259570982582262052248940772671947826848260147699090264013639443745530506820349625245174939965143142980919065925093722169646151570985838741059788595977297549893016175392846813826868386894277415599185592524595395943104997252468084598727364469584865383673622262609912460805124388439045124413654976278079771569143599770012961608944169486855584840635";
+
+// Pi computation state
+let piComputeTarget = 100000;
+const PI_AUTO_LIMIT = 250000;  // auto-expand up to this
+const PI_MAX_DIGITS = 1000000; // hard cap at 1M
+let piComputing = false;
+let piWorker = null;
+let piWorkerUrl = null;
+let piComputeCallbacks = [];
+let piComputeStartTime = 0;
+let piLastElapsed = 0; // time the last computation took (ms)
+let piStatusTimer = null;
+
+// Web Worker for computing Pi using Machin's formula with BigInt
+const piWorkerCode = `
+  'use strict';
+  function computePi(numDigits) {
+    const extra = 30;
+    const N = numDigits + extra;
+    const ONE = 10n ** BigInt(N);
+
+    function arctanDivided(x) {
+      const X = BigInt(x);
+      const X2neg = -(X * X);
+      let power = ONE / X;
+      let sum = power;
+      let n = 3n;
+      while (power !== 0n) {
+        power = power / X2neg;
+        sum += power / n;
+        n += 2n;
+      }
+      return sum;
+    }
+
+    // Machin: pi/4 = 4*arctan(1/5) - arctan(1/239)
+    const pi = 4n * (4n * arctanDivided(5) - arctanDivided(239));
+    let s = pi.toString();
+    if (s[0] === '-') s = s.slice(1);
+    return s.slice(1, numDigits + 1);
+  }
+
+  self.onmessage = function(e) {
+    const { numDigits } = e.data;
+    try {
+      const digits = computePi(numDigits);
+      self.postMessage({ digits, numDigits });
+    } catch(err) {
+      self.postMessage({ error: err.message, numDigits });
+    }
+  };
+`;
+
+function createPiWorker() {
+  if (piWorker) piWorker.terminate();
+  if (!piWorkerUrl) {
+    const blob = new Blob([piWorkerCode], { type: 'application/javascript' });
+    piWorkerUrl = URL.createObjectURL(blob);
+  }
+  piWorker = new Worker(piWorkerUrl);
+  piWorker.onmessage = function(e) {
+    piComputing = false;
+    clearInterval(piStatusTimer);
+    const { digits, numDigits, error } = e.data;
+    if (error) {
+      console.error('Pi computation error:', error);
+      runPiCallbacks();
+      return;
+    }
+    piLastElapsed = Date.now() - piComputeStartTime;
+    if (digits.length > PI_DIGITS.length) {
+      PI_DIGITS = digits;
+    }
+    updatePiStatus();
+    runPiCallbacks();
+  };
+}
+
+function runPiCallbacks() {
+  const cbs = piComputeCallbacks.splice(0);
+  cbs.forEach(cb => cb());
+}
+
+function cancelPiComputation() {
+  if (!piComputing) return;
+  piComputing = false;
+  clearInterval(piStatusTimer);
+  piComputeCallbacks = [];
+  createPiWorker(); // terminate old, create fresh
+  updatePiStatus();
+}
+
+function estimateTime(numDigits) {
+  // O(N^2) scaling. Use last known computation as reference.
+  if (piLastElapsed > 0 && PI_DIGITS.length > 2400) {
+    const ref = PI_DIGITS.length;
+    return piLastElapsed * (numDigits / ref) ** 2;
+  }
+  // Rough fallback estimate: 100K ~ 5s
+  return 5000 * (numDigits / 100000) ** 2;
+}
+
+function formatTime(ms) {
+  if (ms < 1000) return 'under a second';
+  if (ms < 60000) return Math.round(ms / 1000) + ' seconds';
+  return (ms / 60000).toFixed(1) + ' minutes';
+}
+
+function requestPiDigits(numDigits, callback) {
+  if (numDigits <= PI_DIGITS.length) {
+    if (callback) callback();
+    return;
+  }
+  if (numDigits > PI_MAX_DIGITS) numDigits = PI_MAX_DIGITS;
+  if (callback) piComputeCallbacks.push(callback);
+  if (piComputing) return;
+  piComputing = true;
+  piComputeTarget = numDigits;
+  piComputeStartTime = Date.now();
+  updatePiStatus();
+  // Update elapsed time every second
+  piStatusTimer = setInterval(updatePiStatus, 1000);
+  piWorker.postMessage({ numDigits });
+}
+
+function updatePiStatus() {
+  const el = document.getElementById('searchStatus');
+  if (!el) return;
+  if (piComputing) {
+    const elapsed = Date.now() - piComputeStartTime;
+    el.innerHTML = '<span style="color:var(--pi-orange)">Computing ' +
+      piComputeTarget.toLocaleString() + ' digits... (' +
+      formatTime(elapsed) + ' elapsed) </span>' +
+      '<button class="btn btn-red" style="padding:4px 12px;font-size:0.8rem;" onclick="cancelPiComputation()">Cancel</button>';
+  } else {
+    el.innerHTML = '<span style="color:var(--pi-green)">' +
+      PI_DIGITS.length.toLocaleString() + ' digits computed</span>';
+  }
+}
+
+// Start computation on load
+createPiWorker();
+requestPiDigits(100000);
+
+// ========================
+// BACKGROUND FLOATING PIS
+// ========================
+(function initBgPis() {
+  const container = document.getElementById('bgPis');
+  for (let i = 0; i < 30; i++) {
+    const span = document.createElement('span');
+    span.textContent = String.fromCharCode(960); // pi symbol
+    span.style.left = Math.random() * 100 + '%';
+    span.style.fontSize = (1 + Math.random() * 3) + 'rem';
+    span.style.animationDuration = (10 + Math.random() * 20) + 's';
+    span.style.animationDelay = (-Math.random() * 20) + 's';
+    container.appendChild(span);
+  }
+})();
+
+// ========================
+// MASCOT
+// ========================
+const mascotFaces = [
+  String.fromCodePoint(0x1F967), // pie
+];
+document.getElementById('piMascot').textContent = mascotFaces[0];
+
+// ========================
+// NAVIGATION
+// ========================
+function showSection(id) {
+  document.querySelectorAll('.game-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  document.querySelectorAll('#mainNav button').forEach(b => {
+    b.classList.toggle('active', b.dataset.section === id);
+  });
+  // Trigger init for specific sections
+  if (id === 'what-is-pi') drawCircle();
+  if (id === 'polygon') drawPolygon();
+  if (id === 'montecarlo') initDartCanvas();
+  if (id === 'patterns') { showFeynmanPoint(); }
+}
+
+document.querySelectorAll('#mainNav button').forEach(btn => {
+  btn.addEventListener('click', () => showSection(btn.dataset.section));
+});
+
+// ========================
+// WHAT IS PI - CIRCLE DEMO
+// ========================
+const circleCanvas = document.getElementById('circleCanvas');
+const circleCtx = circleCanvas.getContext('2d');
+const radiusSlider = document.getElementById('circleRadius');
+
+function drawCircle() {
+  const r = parseInt(radiusSlider.value);
+  const w = circleCanvas.width, h = circleCanvas.height;
+  const cx = w / 2, cy = h / 2 + 30; // offset down to make room for circumference line at top
+  circleCtx.clearRect(0, 0, w, h);
+
+  // Draw circle
+  circleCtx.beginPath();
+  circleCtx.arc(cx, cy, r, 0, Math.PI * 2);
+  circleCtx.strokeStyle = '#e84393';
+  circleCtx.lineWidth = 3;
+  circleCtx.stroke();
+
+  // Fill with slight transparency
+  circleCtx.fillStyle = 'rgba(232, 67, 147, 0.1)';
+  circleCtx.fill();
+
+  // Draw diameter line
+  circleCtx.beginPath();
+  circleCtx.moveTo(cx - r, cy);
+  circleCtx.lineTo(cx + r, cy);
+  circleCtx.strokeStyle = '#fdcb6e';
+  circleCtx.lineWidth = 3;
+  circleCtx.setLineDash([8, 4]);
+  circleCtx.stroke();
+  circleCtx.setLineDash([]);
+
+  // Label diameter
+  circleCtx.fillStyle = '#fdcb6e';
+  circleCtx.font = 'bold 16px Comic Neue, sans-serif';
+  circleCtx.textAlign = 'center';
+  circleCtx.fillText(`Diameter = ${(r*2).toFixed(1)}`, cx, cy - 10);
+
+  // Draw circumference "unwinding" visualization
+  // Scale: 1 unit of diameter = 1 unit on screen (the circle's diameter is 2r pixels)
+  // So the circumference line is Pi * diameter = Pi * 2r pixels wide, matching the circle's scale.
+  // The middle diameter segment (tick 1 to tick 2) is centered on cx, aligned with the circle's diameter.
+  const circumference = 2 * Math.PI * r;
+  const lineY = 30;
+  const scale = 1; // 1:1 with the circle's pixel size
+  const lineW = circumference * scale;
+  const diamLen = (2 * r) * scale;
+
+  // Position so the middle diameter (segment index 1, from tick1 to tick2) is centered on cx
+  // tick1 = lineStart + diamLen, tick2 = lineStart + 2*diamLen
+  // We want (tick1 + tick2) / 2 = cx => lineStart + 1.5 * diamLen = cx
+  const lineStart = cx - 1.5 * diamLen;
+
+  // Draw the circumference line
+  circleCtx.beginPath();
+  circleCtx.moveTo(lineStart, lineY);
+  circleCtx.lineTo(lineStart + lineW, lineY);
+  circleCtx.strokeStyle = '#e84393';
+  circleCtx.lineWidth = 4;
+  circleCtx.stroke();
+
+  // Mark diameter segment ticks (at 0, 1, 2, 3 diameters)
+  for (let i = 0; i <= 3; i++) {
+    const x = lineStart + diamLen * i;
+    if (x < lineStart - 1 || x > lineStart + lineW + 1) continue;
+    circleCtx.beginPath();
+    circleCtx.moveTo(x, lineY - 10);
+    circleCtx.lineTo(x, lineY + 10);
+    circleCtx.strokeStyle = '#fdcb6e';
+    circleCtx.lineWidth = 2;
+    circleCtx.stroke();
+  }
+
+  // Labels centered on the line
+  const lineMid = lineStart + lineW / 2;
+  circleCtx.fillStyle = '#e84393';
+  circleCtx.font = 'bold 14px Comic Neue, sans-serif';
+  circleCtx.fillText(`Circumference = ${circumference.toFixed(1)}`, lineMid, lineY + 22);
+
+  circleCtx.fillStyle = '#aaa';
+  circleCtx.font = '13px Comic Neue, sans-serif';
+  circleCtx.fillText(`It fits 3.14159... diameters!`, lineMid, lineY + 38);
+
+  // Update stats
+  document.getElementById('statDiam').textContent = (r * 2).toFixed(1);
+  document.getElementById('statCirc').textContent = circumference.toFixed(1);
+  document.getElementById('statRatio').textContent = (circumference / (r * 2)).toFixed(10) + '...';
+}
+
+radiusSlider.addEventListener('input', drawCircle);
+
+// What-is-Pi quiz
+const whatQuizData = [
+  {
+    q: "What does Pi represent?",
+    opts: [
+      "The ratio of a circle's circumference to its diameter",
+      "The area of a unit circle",
+      "The number of degrees in a circle",
+      "A baker's favorite number"
+    ],
+    correct: 0,
+    explain: "Pi is the ratio of circumference to diameter! (Though it IS also a baker's favorite number...)"
+  },
+  {
+    q: "Pi is irrational. What does that mean?",
+    opts: [
+      "It gets angry at other numbers",
+      "It cannot be expressed as a simple fraction, and its decimal never terminates or repeats",
+      "It has no useful applications",
+      "It was discovered by mistake"
+    ],
+    correct: 1,
+    explain: "Irrational means it can't be written as a fraction - the digits go on forever without repeating!"
+  },
+  {
+    q: "How many digits of Pi would you need to calculate the circumference of the observable universe to within the width of a hydrogen atom?",
+    opts: ["About 40", "About 1,000", "About 1 million", "All of them"],
+    correct: 0,
+    explain: "Just ~40 digits! Yet we've computed 105 trillion. Humans are wonderfully excessive."
+  }
+];
+let whatQuizIdx = 0;
+
+function loadWhatQuiz() {
+  const q = whatQuizData[whatQuizIdx];
+  document.getElementById('whatQuizQ').textContent = q.q;
+  const container = document.getElementById('whatQuizOptions');
+  container.innerHTML = '';
+  document.getElementById('whatQuizResult').innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'quiz-option';
+    btn.textContent = opt;
+    btn.addEventListener('click', () => answerWhatQuiz(i, btn));
+    container.appendChild(btn);
+  });
+}
+
+function answerWhatQuiz(idx, btn) {
+  const q = whatQuizData[whatQuizIdx];
+  const buttons = document.querySelectorAll('#whatQuizOptions .quiz-option');
+  buttons.forEach((b, i) => {
+    b.disabled = true;
+    if (i === q.correct) b.classList.add('correct');
+    if (i === idx && idx !== q.correct) b.classList.add('wrong');
+  });
+  const res = document.getElementById('whatQuizResult');
+  if (idx === q.correct) {
+    res.innerHTML = `<div class="result-text result-good">Correct! ${q.explain}</div>`;
+  } else {
+    res.innerHTML = `<div class="result-text result-bad">Nope! ${q.explain}</div>`;
+  }
+  if (whatQuizIdx < whatQuizData.length - 1) {
+    setTimeout(() => { whatQuizIdx++; loadWhatQuiz(); }, 2500);
+  }
+}
+loadWhatQuiz();
+
+// ========================
+// HISTORY QUIZ
+// ========================
+const historyQuizData = [
+  { q: "Who first used the Greek letter Pi to represent the ratio?", opts: ["Archimedes", "Euler", "William Jones", "Pythagoras"], correct: 2 },
+  { q: "The Babylonians approximated Pi as roughly:", opts: ["3", "3.125", "3.14", "4"], correct: 1 },
+  { q: "Who proved Pi is irrational in 1761?", opts: ["Euler", "Johann Lambert", "Newton", "Gauss"], correct: 1 },
+  { q: "Archimedes estimated Pi using what geometric method?", opts: ["Rolling circles on a line", "Inscribing & circumscribing polygons", "Measuring shadows", "Building tiny models"], correct: 1 },
+  { q: "The Chudnovsky brothers computed Pi in:", opts: ["A university supercomputer lab", "Their New York apartment", "A government research facility", "A garage in Silicon Valley"], correct: 1 },
+  { q: "As of 2024, Pi has been computed to about how many digits?", opts: ["1 billion", "1 trillion", "105 trillion", "Infinity"], correct: 2 },
+  { q: "Proving Pi is transcendental (Lindemann, 1882) proved you can't:", opts: ["Divide by Pi", "Square the circle with compass/straightedge", "Memorize all digits", "Use Pi in engineering"], correct: 1 },
+  { q: "Zu Chongzhi's approximation 355/113 is accurate to how many decimal places?", opts: ["3", "5", "6", "7"], correct: 2 },
+];
+
+let hQuizIdx = 0, hQuizScore = 0, hQuizTotal = 0;
+
+function showHistoryTab(tab) {
+  document.getElementById('historyTimeline').style.display = tab === 'timeline' ? '' : 'none';
+  document.getElementById('historyQuiz').style.display = tab === 'quiz' ? '' : 'none';
+  document.querySelectorAll('#sec-history .tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', (i === 0 && tab === 'timeline') || (i === 1 && tab === 'quiz'));
+  });
+  if (tab === 'quiz') loadHistoryQuiz();
+}
+
+function loadHistoryQuiz() {
+  const area = document.getElementById('hQuizArea');
+  const q = historyQuizData[hQuizIdx % historyQuizData.length];
+  area.innerHTML = `<h3>Question ${hQuizIdx + 1}</h3><p>${q.q}</p>`;
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'quiz-option';
+    btn.textContent = opt;
+    btn.addEventListener('click', () => answerHistoryQuiz(i, btn));
+    area.appendChild(btn);
+  });
+}
+
+function answerHistoryQuiz(idx) {
+  const q = historyQuizData[hQuizIdx % historyQuizData.length];
+  const buttons = document.querySelectorAll('#hQuizArea .quiz-option');
+  buttons.forEach((b, i) => {
+    b.disabled = true;
+    if (i === q.correct) b.classList.add('correct');
+    if (i === idx && idx !== q.correct) b.classList.add('wrong');
+  });
+  hQuizTotal++;
+  if (idx === q.correct) hQuizScore++;
+  document.getElementById('hQuizScore').textContent = `Score: ${hQuizScore} / ${hQuizTotal}`;
+  hQuizIdx++;
+  if (hQuizIdx < historyQuizData.length) {
+    setTimeout(loadHistoryQuiz, 1500);
+  } else {
+    setTimeout(() => {
+      document.getElementById('hQuizArea').innerHTML =
+        `<div class="result-text ${hQuizScore >= 6 ? 'result-good' : hQuizScore >= 4 ? 'result-ok' : 'result-bad'}">
+          You got ${hQuizScore} out of ${hQuizTotal}! ${hQuizScore >= 6 ? "You're a Pi historian!" : hQuizScore >= 4 ? "Not bad, time traveler!" : "Maybe re-read the timeline? No shame!"}
+        </div>
+        <button class="btn btn-pink" onclick="hQuizIdx=0;hQuizScore=0;hQuizTotal=0;loadHistoryQuiz();document.getElementById('hQuizScore').textContent='Score: 0 / 0';">Try Again</button>`;
+    }, 1500);
+  }
+}
+
+// ========================
+// POLYGON SQUEEZE
+// ========================
+const polyCanvas = document.getElementById('polyCanvas');
+const polyCtx = polyCanvas.getContext('2d');
+const polySidesSlider = document.getElementById('polySides');
+
+function drawPolygon() {
+  const n = parseInt(polySidesSlider.value);
+  const w = polyCanvas.width, h = polyCanvas.height;
+  const cx = w / 2, cy = h / 2;
+  const r = 160;
+  polyCtx.clearRect(0, 0, w, h);
+
+  // Draw outer polygon (circumscribed)
+  const outerR = r / Math.cos(Math.PI / n);
+  polyCtx.beginPath();
+  for (let i = 0; i <= n; i++) {
+    const angle = (2 * Math.PI * i / n) - Math.PI / 2;
+    const x = cx + outerR * Math.cos(angle);
+    const y = cy + outerR * Math.sin(angle);
+    if (i === 0) polyCtx.moveTo(x, y);
+    else polyCtx.lineTo(x, y);
+  }
+  polyCtx.strokeStyle = '#fdcb6e';
+  polyCtx.lineWidth = 2;
+  polyCtx.stroke();
+  polyCtx.fillStyle = 'rgba(253, 203, 110, 0.08)';
+  polyCtx.fill();
+
+  // Draw circle
+  polyCtx.beginPath();
+  polyCtx.arc(cx, cy, r, 0, Math.PI * 2);
+  polyCtx.strokeStyle = '#e84393';
+  polyCtx.lineWidth = 3;
+  polyCtx.stroke();
+
+  // Draw inner polygon (inscribed)
+  polyCtx.beginPath();
+  for (let i = 0; i <= n; i++) {
+    const angle = (2 * Math.PI * i / n) - Math.PI / 2;
+    const x = cx + r * Math.cos(angle);
+    const y = cy + r * Math.sin(angle);
+    if (i === 0) polyCtx.moveTo(x, y);
+    else polyCtx.lineTo(x, y);
+  }
+  polyCtx.strokeStyle = '#00b894';
+  polyCtx.lineWidth = 2;
+  polyCtx.stroke();
+  polyCtx.fillStyle = 'rgba(0, 184, 148, 0.1)';
+  polyCtx.fill();
+
+  // Labels
+  polyCtx.fillStyle = '#fdcb6e';
+  polyCtx.font = 'bold 14px Comic Neue, sans-serif';
+  polyCtx.textAlign = 'left';
+  polyCtx.fillText('Outer polygon (too big)', cx + outerR + 10, cy - 20);
+  polyCtx.fillStyle = '#e84393';
+  polyCtx.fillText('Circle (Pi lives here)', cx + r + 10, cy);
+  polyCtx.fillStyle = '#00b894';
+  polyCtx.fillText('Inner polygon (too small)', cx + r + 10, cy + 20);
+
+  // Calculate
+  const inner = n * Math.sin(Math.PI / n); // n * sin(pi/n)
+  const outer = n * Math.tan(Math.PI / n); // n * tan(pi/n)
+  const avg = (inner + outer) / 2;
+
+  document.getElementById('polyCount').textContent = n;
+  document.getElementById('polyInner').textContent = inner.toFixed(10);
+  document.getElementById('polyOuter').textContent = outer.toFixed(10);
+  document.getElementById('polyAvg').textContent = avg.toFixed(10);
+
+  // Show how close to pi
+  polyCtx.fillStyle = '#eee';
+  polyCtx.font = 'bold 16px Comic Neue, sans-serif';
+  polyCtx.textAlign = 'center';
+  const digits = countMatchingDigits(avg);
+  polyCtx.fillText(`${n}-gon: ~${digits} correct digit${digits !== 1 ? 's' : ''} of Pi!`, cx, h - 20);
+}
+
+function countMatchingDigits(estimate) {
+  const piStr = '3.14159265358979323846';
+  const estStr = estimate.toFixed(15);
+  let count = 0;
+  for (let i = 0; i < Math.min(piStr.length, estStr.length); i++) {
+    if (piStr[i] === estStr[i]) count++;
+    else break;
+  }
+  return Math.max(0, count - 2); // subtract "3."
+}
+
+polySidesSlider.addEventListener('input', drawPolygon);
+
+let polyAnimId = null;
+function animatePolygon() {
+  if (polyAnimId) { cancelAnimationFrame(polyAnimId); polyAnimId = null; }
+  polySidesSlider.value = 3;
+  let current = 3;
+  function step() {
+    if (current > 200) { polyAnimId = null; return; }
+    polySidesSlider.value = current;
+    drawPolygon();
+    current += (current < 20) ? 1 : (current < 50) ? 2 : 5;
+    polyAnimId = requestAnimationFrame(() => setTimeout(step, 80));
+  }
+  step();
+}
+
+// ========================
+// MONTE CARLO DARTS
+// ========================
+const dartCanvas = document.getElementById('dartCanvas');
+const dartCtx = dartCanvas.getContext('2d');
+let dartData = { total: 0, inside: 0, points: [] };
+
+function initDartCanvas() {
+  const w = dartCanvas.width, h = dartCanvas.height;
+  dartCtx.clearRect(0, 0, w, h);
+
+  // Draw square boundary
+  dartCtx.strokeStyle = '#444';
+  dartCtx.lineWidth = 2;
+  dartCtx.strokeRect(10, 10, w - 20, h - 20);
+
+  // Draw inscribed circle
+  dartCtx.beginPath();
+  dartCtx.arc(w/2, h/2, (w-20)/2, 0, Math.PI * 2);
+  dartCtx.strokeStyle = 'rgba(232, 67, 147, 0.4)';
+  dartCtx.lineWidth = 2;
+  dartCtx.stroke();
+
+  // Redraw existing points
+  for (const p of dartData.points) {
+    dartCtx.beginPath();
+    dartCtx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+    dartCtx.fillStyle = p.inside ? 'rgba(0, 184, 148, 0.7)' : 'rgba(214, 48, 49, 0.7)';
+    dartCtx.fill();
+  }
+}
+
+function throwDarts(count) {
+  const w = dartCanvas.width, h = dartCanvas.height;
+  const cx = w/2, cy = h/2, r = (w-20)/2;
+
+  for (let i = 0; i < count; i++) {
+    const x = 10 + Math.random() * (w - 20);
+    const y = 10 + Math.random() * (h - 20);
+    const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+    const inside = dist <= r;
+
+    dartData.total++;
+    if (inside) dartData.inside++;
+
+    if (dartData.total <= 10000) {
+      dartData.points.push({ x, y, inside });
+      dartCtx.beginPath();
+      dartCtx.arc(x, y, count > 100 ? 1.5 : 2.5, 0, Math.PI * 2);
+      dartCtx.fillStyle = inside ? 'rgba(0, 184, 148, 0.7)' : 'rgba(214, 48, 49, 0.7)';
+      dartCtx.fill();
+    }
+  }
+
+  const piEst = dartData.total > 0 ? (4 * dartData.inside / dartData.total) : 0;
+  const error = Math.abs(piEst - Math.PI);
+  document.getElementById('dartTotal').textContent = dartData.total.toLocaleString();
+  document.getElementById('dartInside').textContent = dartData.inside.toLocaleString();
+  document.getElementById('dartPi').textContent = dartData.total > 0 ? piEst.toFixed(6) : '-';
+  document.getElementById('dartError').textContent = dartData.total > 0 ? error.toFixed(6) : '-';
+}
+
+function resetDarts() {
+  dartData = { total: 0, inside: 0, points: [] };
+  document.getElementById('dartTotal').textContent = '0';
+  document.getElementById('dartInside').textContent = '0';
+  document.getElementById('dartPi').textContent = '-';
+  document.getElementById('dartError').textContent = '-';
+  initDartCanvas();
+}
+
+// ========================
+// FORMULA RACE
+// ========================
+let raceState = { step: 0, values: [0, 3, 0, 0], running: false, intervalId: null };
+
+function leibniz(n) {
+  let sum = 0;
+  for (let k = 0; k <= n; k++) {
+    sum += (k % 2 === 0 ? 1 : -1) / (2 * k + 1);
+  }
+  return 4 * sum;
+}
+
+function nilakantha(n) {
+  let sum = 3;
+  for (let k = 1; k <= n; k++) {
+    const d = 2 * k;
+    const term = 4 / (d * (d + 1) * (d + 2));
+    sum += (k % 2 === 1) ? term : -term;
+  }
+  return sum;
+}
+
+function machinLike(n) {
+  // Machin: pi/4 = 4*arctan(1/5) - arctan(1/239)
+  // arctan(x) = x - x^3/3 + x^5/5 - ...
+  function arctanPartial(x, terms) {
+    let sum = 0;
+    for (let k = 0; k <= terms; k++) {
+      sum += (k % 2 === 0 ? 1 : -1) * Math.pow(x, 2 * k + 1) / (2 * k + 1);
+    }
+    return sum;
+  }
+  return 4 * (4 * arctanPartial(1/5, n) - arctanPartial(1/239, n));
+}
+
+function chudnovsky(n) {
+  // Simplified Chudnovsky-ish (using factorial approach)
+  if (n === 0) return 3.14159265358979; // cheat slightly for display
+  let sum = 0;
+  for (let k = 0; k <= Math.min(n, 10); k++) {
+    const num = factorial(6*k) * (13591409 + 545140134 * k);
+    const den = factorial(3*k) * Math.pow(factorial(k), 3) * Math.pow(-262537412640768000, k);
+    sum += num / den;
+  }
+  if (sum === 0) return Math.PI;
+  return 1 / (sum * 12 / Math.sqrt(640320 * 640320 * 640320));
+}
+
+function factorial(n) {
+  if (n <= 1) return 1;
+  if (n > 170) return Infinity;
+  let result = 1;
+  for (let i = 2; i <= n; i++) result *= i;
+  return result;
+}
+
+function updateRaceDisplay() {
+  const step = raceState.step;
+  const formulas = [leibniz, nilakantha, machinLike, chudnovsky];
+  const maxDigits = 14; // max meaningful digits for display
+
+  for (let i = 0; i < 4; i++) {
+    const val = formulas[i](step);
+    raceState.values[i] = val;
+    const error = Math.abs(val - Math.PI);
+    let digits = 0;
+    if (error > 0) {
+      digits = Math.min(maxDigits, -Math.log10(error));
+      digits = Math.max(0, digits);
+    } else {
+      digits = maxDigits;
+    }
+
+    const pct = Math.min(100, (digits / maxDigits) * 100);
+    document.getElementById(`raceBar${i}`).style.width = pct + '%';
+    document.getElementById(`raceVal${i}`).textContent =
+      val.toFixed(Math.min(12, Math.max(1, Math.floor(digits) + 1))) +
+      ` (${digits.toFixed(1)} digits)`;
+  }
+  document.getElementById('raceStep').textContent = `Step: ${step}`;
+}
+
+function stepRace() {
+  raceState.step++;
+  updateRaceDisplay();
+}
+
+function startRace() {
+  if (raceState.running) return;
+  raceState.running = true;
+  raceState.step = 0;
+  raceState.intervalId = setInterval(() => {
+    raceState.step++;
+    updateRaceDisplay();
+    if (raceState.step >= 50) {
+      clearInterval(raceState.intervalId);
+      raceState.running = false;
+    }
+  }, 200);
+}
+
+function resetRace() {
+  if (raceState.intervalId) clearInterval(raceState.intervalId);
+  raceState = { step: 0, values: [0, 3, 0, 0], running: false, intervalId: null };
+  for (let i = 0; i < 4; i++) {
+    document.getElementById(`raceBar${i}`).style.width = '0%';
+    document.getElementById(`raceVal${i}`).textContent = '-';
+  }
+  document.getElementById('raceStep').textContent = 'Step: 0';
+}
+
+// ========================
+// RACE TABS + CHUDNOVSKY DEMO
+// ========================
+function showRaceTab(tab) {
+  document.getElementById('raceMain').style.display = tab === 'race' ? '' : 'none';
+  document.getElementById('raceChudnovsky').style.display = tab === 'chudnovsky' ? '' : 'none';
+  document.querySelectorAll('#sec-race .tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', (i === 0 && tab === 'race') || (i === 1 && tab === 'chudnovsky'));
+  });
+}
+
+let chudnovskyDemoK = -1;
+function stepChudnovskyDemo() {
+  chudnovskyDemoK++;
+  const k = chudnovskyDemoK;
+  const container = document.getElementById('chudnovskySteps');
+
+  // Compute partial sum up to term k
+  let sum = 0;
+  for (let j = 0; j <= k; j++) {
+    const num = factorial(6*j) * (13591409 + 545140134 * j);
+    const den = factorial(3*j) * Math.pow(factorial(j), 3) * Math.pow(-262537412640768000, j);
+    sum += num / den;
+  }
+  let piEst = 1 / (sum * 12 / Math.sqrt(640320 * 640320 * 640320));
+  const error = Math.abs(piEst - Math.PI);
+  const digits = error > 0 ? Math.min(15, Math.max(0, -Math.log10(error))) : 15;
+
+  const div = document.createElement('div');
+  div.style.cssText = 'padding:8px 12px;margin:4px 0;border-radius:8px;font-family:Courier New,monospace;background:rgba(9,132,227,0.1);border-left:3px solid var(--pi-blue);';
+  div.innerHTML = `<b>Term ${k}:</b> ${piEst.toFixed(15)} <span style="color:var(--pi-green)">(~${digits.toFixed(1)} correct digits)</span>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function resetChudnovskyDemo() {
+  chudnovskyDemoK = -1;
+  document.getElementById('chudnovskySteps').innerHTML = '';
+}
+
+// ========================
+// DIGIT DETECTIVE
+// ========================
+function showPatternTab(tab) {
+  ['search', 'feynman', 'frequency', 'birthday'].forEach(t => {
+    document.getElementById('pattern' + t.charAt(0).toUpperCase() + t.slice(1)).style.display =
+      t === tab ? '' : 'none';
+  });
+  document.querySelectorAll('#sec-patterns .tab-btn').forEach((b, i) => {
+    const tabs = ['search', 'feynman', 'frequency', 'birthday'];
+    b.classList.toggle('active', tabs[i] === tab);
+  });
+  if (tab === 'frequency') drawFrequency();
+  if (tab === 'feynman') showFeynmanPoint();
+}
+
+let searchDebounceTimer = null;
+function searchInPi() {
+  clearTimeout(searchDebounceTimer);
+  // Cancel any ongoing deep search if user is still typing
+  if (piComputing && piComputeTarget > 100000) {
+    cancelPiComputation();
+  }
+  searchDebounceTimer = setTimeout(doSearchInPi, 300);
+}
+
+function doSearchInPi() {
+  const query = document.getElementById('pattern-search').value.replace(/\D/g, '');
+  const resultDiv = document.getElementById('searchResult');
+  const displayDiv = document.getElementById('searchDisplay');
+
+  if (!query) {
+    resultDiv.innerHTML = '';
+    displayDiv.style.display = 'none';
+    updatePiStatus();
+    return;
+  }
+
+  const idx = PI_DIGITS.indexOf(query);
+  if (idx >= 0) {
+    showSearchResult(query, idx, resultDiv, displayDiv);
+    return;
+  }
+
+  // Not found - should we auto-expand or offer a button?
+  const nextTarget = Math.min(PI_DIGITS.length + 100000, PI_MAX_DIGITS);
+
+  if (nextTarget <= PI_AUTO_LIMIT) {
+    // Auto-expand up to 250K
+    resultDiv.innerHTML = `<div class="result-text result-ok">Not found in ${PI_DIGITS.length.toLocaleString()} digits. Auto-searching ${nextTarget.toLocaleString()}...</div>`;
+    displayDiv.style.display = 'none';
+    requestPiDigits(nextTarget, function() {
+      const currentQuery = document.getElementById('pattern-search').value.replace(/\D/g, '');
+      if (currentQuery !== query) return;
+      doSearchInPi(); // retry (will recurse until found, or hits limit)
+    });
+  } else if (PI_DIGITS.length < PI_MAX_DIGITS) {
+    // Beyond auto-limit: show manual button with time estimate
+    const est = estimateTime(nextTarget);
+    displayDiv.style.display = 'none';
+    resultDiv.innerHTML = `<div class="result-text result-ok">"${query}" not found in ${PI_DIGITS.length.toLocaleString()} digits.</div>` +
+      `<div style="margin-top:10px;text-align:center;">` +
+      `<button class="btn btn-purple" onclick="deepSearchPi('${query}', ${nextTarget})">` +
+      `Search ${nextTarget.toLocaleString()} digits (~${formatTime(est)})</button> ` +
+      (nextTarget + 100000 <= PI_MAX_DIGITS ?
+        `<button class="btn btn-blue" onclick="deepSearchPi('${query}', ${Math.min(nextTarget + 400000, PI_MAX_DIGITS)})">` +
+        `Go big: ${Math.min(nextTarget + 400000, PI_MAX_DIGITS).toLocaleString()} digits (~${formatTime(estimateTime(Math.min(nextTarget + 400000, PI_MAX_DIGITS)))})</button>` : '') +
+      `</div>` +
+      `<div class="fun-fact" style="margin-top:10px">Computation time scales quadratically (O(N<sup>2</sup>)) with digit count because Machin's formula requires ~N iterations of N-digit BigInt arithmetic. This is the same method your browser is using to compute Pi right now!</div>`;
+  } else {
+    displayDiv.style.display = 'none';
+    resultDiv.innerHTML = `<div class="result-text result-bad">"${query}" not found in ${PI_DIGITS.length.toLocaleString()} digits! Pi is widely believed to contain every finite digit sequence (a property called "normality"), but this has never been mathematically proven. Your sequence might need more digits than we can compute here.</div>`;
+  }
+  updatePiStatus();
+}
+
+function deepSearchPi(query, target) {
+  const resultDiv = document.getElementById('searchResult');
+  const displayDiv = document.getElementById('searchDisplay');
+  resultDiv.innerHTML = `<div class="result-text result-ok">Computing ${target.toLocaleString()} digits...</div>`;
+  displayDiv.style.display = 'none';
+  requestPiDigits(target, function() {
+    const currentQuery = document.getElementById('pattern-search').value.replace(/\D/g, '');
+    if (currentQuery !== query) return;
+    doSearchInPi();
+  });
+}
+
+function showSearchResult(query, idx, resultDiv, displayDiv) {
+  resultDiv.innerHTML = `<div class="result-text result-good">"${query}" first appears at position <b>${(idx + 1).toLocaleString()}</b> after the decimal point!</div>`;
+  displayDiv.style.display = '';
+  const start = Math.max(0, idx - 20);
+  const end = Math.min(PI_DIGITS.length, idx + query.length + 20);
+  let html = '3.' + (start > 0 ? '...' : '');
+  for (let i = start; i < end; i++) {
+    if (i >= idx && i < idx + query.length) {
+      html += `<span class="highlight">${PI_DIGITS[i]}</span>`;
+    } else {
+      html += PI_DIGITS[i];
+    }
+  }
+  html += '...';
+  displayDiv.innerHTML = html;
+  updatePiStatus();
+}
+
+function showFeynmanPoint() {
+  const display = document.getElementById('feynmanDisplay');
+  const start = 757; // 0-indexed position of the run of 9s
+  const end = 770;
+  let html = '...';
+  for (let i = start; i < end; i++) {
+    if (i >= 761 && i < 767) {
+      html += `<span class="highlight">${PI_DIGITS[i]}</span>`;
+    } else {
+      html += PI_DIGITS[i];
+    }
+  }
+  html += '...';
+  display.innerHTML = html;
+}
+
+function searchBirthday() {
+  const input = document.getElementById('birthdayInput');
+  if (!input) return;
+  const query = input.value.replace(/\D/g, '');
+  const resultDiv = document.getElementById('birthdayResult');
+
+  if (!query || query.length < 4) {
+    resultDiv.innerHTML = '<p style="color:#aaa">Type at least 4 digits...</p>';
+    return;
+  }
+
+  const idx = PI_DIGITS.indexOf(query);
+  if (idx >= 0) {
+    resultDiv.innerHTML = `<div class="result-text result-good">Your birthday "${query}" appears at position <b>${(idx + 1).toLocaleString()}</b>! You're literally part of Pi!</div>`;
+  } else {
+    const nextTarget = Math.min(PI_DIGITS.length + 100000, PI_MAX_DIGITS);
+    if (nextTarget <= PI_AUTO_LIMIT) {
+      resultDiv.innerHTML = `<div class="result-text result-ok">Searching ${nextTarget.toLocaleString()} digits...</div>`;
+      requestPiDigits(nextTarget, function() {
+        const currentQuery = document.getElementById('birthdayInput').value.replace(/\D/g, '');
+        if (currentQuery !== query) return;
+        searchBirthday();
+      });
+    } else if (PI_DIGITS.length < PI_MAX_DIGITS) {
+      const est = estimateTime(nextTarget);
+      resultDiv.innerHTML = `<div class="result-text result-ok">"${query}" not found in ${PI_DIGITS.length.toLocaleString()} digits.</div>` +
+        `<div style="margin-top:10px;text-align:center;">` +
+        `<button class="btn btn-purple" onclick="deepSearchBirthday('${query}', ${nextTarget})">` +
+        `Search deeper: ${nextTarget.toLocaleString()} digits (~${formatTime(est)})</button></div>`;
+    } else {
+      resultDiv.innerHTML = `<div class="result-text result-ok">"${query}" wasn't found in ${PI_DIGITS.length.toLocaleString()} digits. Try fewer digits (MMDD)!</div>`;
+    }
+  }
+}
+
+function deepSearchBirthday(query, target) {
+  const resultDiv = document.getElementById('birthdayResult');
+  resultDiv.innerHTML = `<div class="result-text result-ok">Computing ${target.toLocaleString()} digits...</div>`;
+  requestPiDigits(target, function() {
+    const currentQuery = document.getElementById('birthdayInput').value.replace(/\D/g, '');
+    if (currentQuery !== query) return;
+    searchBirthday();
+  });
+}
+
+// Frequency chart
+const freqCanvas = document.getElementById('freqCanvas');
+const freqCtx = freqCanvas ? freqCanvas.getContext('2d') : null;
+
+function drawFrequency() {
+  if (!freqCtx) return;
+  const w = freqCanvas.width, h = freqCanvas.height;
+  freqCtx.clearRect(0, 0, w, h);
+
+  // Count digits
+  const counts = new Array(10).fill(0);
+  const total = PI_DIGITS.length;
+  for (let i = 0; i < total; i++) {
+    counts[parseInt(PI_DIGITS[i])]++;
+  }
+
+  const maxCount = Math.max(...counts);
+  const barW = (w - 80) / 10;
+  const colors = ['#e84393', '#6c3fa0', '#0984e3', '#00b894', '#fdcb6e',
+                  '#d63031', '#e84393', '#6c3fa0', '#0984e3', '#00b894'];
+
+  // Expected line
+  const expected = total / 10;
+  const expectedY = h - 40 - ((expected / maxCount) * (h - 80));
+
+  freqCtx.setLineDash([5, 5]);
+  freqCtx.beginPath();
+  freqCtx.moveTo(40, expectedY);
+  freqCtx.lineTo(w - 20, expectedY);
+  freqCtx.strokeStyle = 'rgba(255,255,255,0.3)';
+  freqCtx.lineWidth = 1;
+  freqCtx.stroke();
+  freqCtx.setLineDash([]);
+
+  freqCtx.fillStyle = '#888';
+  freqCtx.font = '12px Comic Neue, sans-serif';
+  freqCtx.textAlign = 'right';
+  freqCtx.fillText(`expected: ${expected}`, w - 25, expectedY - 5);
+
+  for (let i = 0; i < 10; i++) {
+    const barH = (counts[i] / maxCount) * (h - 80);
+    const x = 40 + i * barW + 5;
+    const y = h - 40 - barH;
+
+    freqCtx.fillStyle = colors[i];
+    freqCtx.fillRect(x, y, barW - 10, barH);
+
+    // Digit label
+    freqCtx.fillStyle = '#eee';
+    freqCtx.font = 'bold 16px Comic Neue, sans-serif';
+    freqCtx.textAlign = 'center';
+    freqCtx.fillText(i.toString(), x + (barW - 10) / 2, h - 20);
+
+    // Count label
+    freqCtx.font = '12px Comic Neue, sans-serif';
+    freqCtx.fillText(counts[i].toString(), x + (barW - 10) / 2, y - 5);
+  }
+
+  // Verdict
+  const minCount = Math.min(...counts);
+  const deviation = ((maxCount - minCount) / expected * 100).toFixed(1);
+  document.getElementById('freqVerdict').innerHTML =
+    `<div class="fun-fact">Each digit appears between ${minCount} and ${maxCount} times out of ${total}. ` +
+    `That's a spread of just ${deviation}% from expected! ` +
+    `Pi's digits are suspiciously fair for a number that can't even be written as a fraction.</div>`;
+}
+
+// ========================
+// MEMORY DOJO
+// ========================
+function showMemoryTab(tab) {
+  ['practice', 'challenge', 'leaderboard'].forEach(t => {
+    document.getElementById('memory' + t.charAt(0).toUpperCase() + t.slice(1)).style.display =
+      t === tab ? '' : 'none';
+  });
+  document.querySelectorAll('#sec-memory .tab-btn').forEach((b, i) => {
+    const tabs = ['practice', 'challenge', 'leaderboard'];
+    b.classList.toggle('active', tabs[i] === tab);
+  });
+}
+
+function showPiDigits(n) {
+  const display = document.getElementById('practiceDisplay');
+  let html = '3.';
+  for (let i = 0; i < n; i++) {
+    if (i > 0 && i % 5 === 0) html += ' ';
+    if (i > 0 && i % 50 === 0) html += '<br>';
+    html += PI_DIGITS[i];
+  }
+  display.innerHTML = html;
+}
+
+const memInput = document.getElementById('memory-input');
+let memBestScore = 0;
+
+if (memInput) {
+  memInput.addEventListener('input', function() {
+    const typed = this.value.replace(/\D/g, '');
+    this.value = typed;
+    const feedback = document.getElementById('memoryFeedback');
+    let html = '';
+    let correct = 0;
+    let foundError = false;
+
+    for (let i = 0; i < typed.length; i++) {
+      if (!foundError && typed[i] === PI_DIGITS[i]) {
+        html += `<span class="correct-char">${typed[i]}</span>`;
+        correct++;
+      } else {
+        foundError = true;
+        html += `<span class="wrong-char">${typed[i]}</span>`;
+      }
+    }
+
+    feedback.innerHTML = html;
+    document.getElementById('memCorrect').textContent = correct;
+
+    if (correct > memBestScore) memBestScore = correct;
+
+    // Rank
+    let rank = 'Newbie';
+    if (correct >= 100) rank = 'Pi Wizard';
+    else if (correct >= 50) rank = 'Circle Sage';
+    else if (correct >= 30) rank = 'Pi Enthusiast';
+    else if (correct >= 20) rank = 'Getting Warm!';
+    else if (correct >= 10) rank = 'Decimal Dabbler';
+    else if (correct >= 5) rank = 'Pi Curious';
+    document.getElementById('memRank').textContent = rank;
+
+    // Update leaderboard
+    document.getElementById('memYourScore').textContent = memBestScore;
+    document.getElementById('memYourComment').textContent =
+      memBestScore >= 50 ? "Incredible! You're in elite company!" :
+      memBestScore >= 20 ? "Impressive! Most people can't get past 10." :
+      memBestScore >= 5 ? "A noble effort! Keep practicing!" :
+      "Take the challenge to see where you rank!";
+
+    // Flash red on error
+    if (foundError) {
+      this.style.borderColor = 'var(--pi-red)';
+    } else {
+      this.style.borderColor = 'var(--pi-purple)';
+    }
+  });
+}
+
+function resetMemory() {
+  memInput.value = '';
+  document.getElementById('memoryFeedback').innerHTML = '';
+  document.getElementById('memCorrect').textContent = '0';
+  document.getElementById('memRank').textContent = 'Newbie';
+  memInput.style.borderColor = 'var(--pi-purple)';
+}
+
+// ========================
+// INIT
+// ========================
+drawCircle();
+</script>
+</body>
+</html>
