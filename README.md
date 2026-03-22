@@ -9,7 +9,7 @@ An interactive web-based game that teaches what Pi is, its history, how it's cal
 - **Squeeze It!** - Archimedes' polygon method: watch inscribed/circumscribed polygons converge on Pi
 - **Dart Circus** - Monte Carlo simulation: throw darts to estimate Pi
 - **Formula Race** - Watch Leibniz, Nilakantha, Machin, and Chudnovsky formulas race to converge, with a deep dive into the Chudnovsky algorithm
-- **Digit Detective** - Search for patterns in Pi's digits (computed dynamically up to 1M), explore the Feynman Point, analyze digit frequency, find your birthday
+- **Digit Detective** - Search for patterns in Pi's digits (computed dynamically up to 1M), explore the Feynman Point, analyze digit frequency
 - **Memory Dojo** - Memorize and recall digits of Pi
 
 ## Run it

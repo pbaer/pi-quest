@@ -194,6 +194,7 @@
     background: #2d3436;
     outline: none;
     margin: 10px 0;
+    touch-action: none;
   }
   input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
@@ -615,7 +616,7 @@
 
   <div class="controls-row">
     <span>3 sides</span>
-    <input type="range" id="polySides" min="3" max="200" value="6" style="flex:1">
+    <input type="range" id="polySides" min="0" max="100" value="12" style="flex:1">
     <span>200 sides</span>
     <button class="btn btn-pink" onclick="animatePolygon()">Auto-Squeeze!</button>
   </div>
@@ -851,7 +852,6 @@
     <button class="tab-btn active" onclick="showPatternTab('search')">Pattern Search</button>
     <button class="tab-btn" onclick="showPatternTab('feynman')">Feynman Point</button>
     <button class="tab-btn" onclick="showPatternTab('frequency')">Digit Frequency</button>
-    <button class="tab-btn" onclick="showPatternTab('birthday')">Birthday Finder</button>
   </div>
 
   <div id="patternSearch">
@@ -882,13 +882,6 @@
     <div id="freqVerdict" style="margin-top:10px"></div>
   </div>
 
-  <div id="patternBirthday" style="display:none">
-    <h3>Find Your Birthday in Pi!</h3>
-    <p>Enter your birthday (MMDDYY or MMDDYYYY) and find out where you appear in Pi:</p>
-    <input type="text" id="birthdayInput" placeholder="e.g. 031490 or 03141592" maxlength="8"
-           oninput="searchBirthday()" style="width:100%;padding:12px;font-family:'Courier New',monospace;font-size:1.2rem;border:2px solid var(--pi-blue);border-radius:12px;background:rgba(0,0,0,0.3);color:var(--text-light);outline:none;text-align:center;">
-    <div id="birthdayResult" style="margin-top:10px"></div>
-  </div>
 </section>
 
 <!-- ============== MEMORY DOJO ============== -->
@@ -1401,8 +1394,17 @@ const polyCanvas = document.getElementById('polyCanvas');
 const polyCtx = polyCanvas.getContext('2d');
 const polySidesSlider = document.getElementById('polySides');
 
+// Non-linear slider: 0-100 maps to 3-200, with low values spread out
+function sliderToSides(v) {
+  const t = v / 100; // 0..1
+  return Math.round(3 + 197 * t * t);
+}
+function sidesToSlider(n) {
+  return Math.round(100 * Math.sqrt((n - 3) / 197));
+}
+
 function drawPolygon() {
-  const n = parseInt(polySidesSlider.value);
+  const n = sliderToSides(parseInt(polySidesSlider.value));
   const w = polyCanvas.width, h = polyCanvas.height;
   const cx = w / 2, cy = h / 2;
   const r = 160;
@@ -1490,11 +1492,11 @@ polySidesSlider.addEventListener('input', drawPolygon);
 let polyAnimId = null;
 function animatePolygon() {
   if (polyAnimId) { cancelAnimationFrame(polyAnimId); polyAnimId = null; }
-  polySidesSlider.value = 3;
+  polySidesSlider.value = 0;
   let current = 3;
   function step() {
     if (current > 200) { polyAnimId = null; return; }
-    polySidesSlider.value = current;
+    polySidesSlider.value = sidesToSlider(current);
     drawPolygon();
     current += (current < 20) ? 1 : (current < 50) ? 2 : 5;
     polyAnimId = requestAnimationFrame(() => setTimeout(step, 80));
@@ -1729,12 +1731,12 @@ function resetChudnovskyDemo() {
 // DIGIT DETECTIVE
 // ========================
 function showPatternTab(tab) {
-  ['search', 'feynman', 'frequency', 'birthday'].forEach(t => {
+  ['search', 'feynman', 'frequency'].forEach(t => {
     document.getElementById('pattern' + t.charAt(0).toUpperCase() + t.slice(1)).style.display =
       t === tab ? '' : 'none';
   });
   document.querySelectorAll('#sec-patterns .tab-btn').forEach((b, i) => {
-    const tabs = ['search', 'feynman', 'frequency', 'birthday'];
+    const tabs = ['search', 'feynman', 'frequency'];
     b.classList.toggle('active', tabs[i] === tab);
   });
   if (tab === 'frequency') drawFrequency();
@@ -1845,51 +1847,6 @@ function showFeynmanPoint() {
   }
   html += '...';
   display.innerHTML = html;
-}
-
-function searchBirthday() {
-  const input = document.getElementById('birthdayInput');
-  if (!input) return;
-  const query = input.value.replace(/\D/g, '');
-  const resultDiv = document.getElementById('birthdayResult');
-
-  if (!query || query.length < 4) {
-    resultDiv.innerHTML = '<p style="color:#aaa">Type at least 4 digits...</p>';
-    return;
-  }
-
-  const idx = PI_DIGITS.indexOf(query);
-  if (idx >= 0) {
-    resultDiv.innerHTML = `<div class="result-text result-good">Your birthday "${query}" appears at position <b>${(idx + 1).toLocaleString()}</b>! You're literally part of Pi!</div>`;
-  } else {
-    const nextTarget = Math.min(PI_DIGITS.length + 100000, PI_MAX_DIGITS);
-    if (nextTarget <= PI_AUTO_LIMIT) {
-      resultDiv.innerHTML = `<div class="result-text result-ok">Searching ${nextTarget.toLocaleString()} digits...</div>`;
-      requestPiDigits(nextTarget, function() {
-        const currentQuery = document.getElementById('birthdayInput').value.replace(/\D/g, '');
-        if (currentQuery !== query) return;
-        searchBirthday();
-      });
-    } else if (PI_DIGITS.length < PI_MAX_DIGITS) {
-      const est = estimateTime(nextTarget);
-      resultDiv.innerHTML = `<div class="result-text result-ok">"${query}" not found in ${PI_DIGITS.length.toLocaleString()} digits.</div>` +
-        `<div style="margin-top:10px;text-align:center;">` +
-        `<button class="btn btn-purple" onclick="deepSearchBirthday('${query}', ${nextTarget})">` +
-        `Search deeper: ${nextTarget.toLocaleString()} digits (~${formatTime(est)})</button></div>`;
-    } else {
-      resultDiv.innerHTML = `<div class="result-text result-ok">"${query}" wasn't found in ${PI_DIGITS.length.toLocaleString()} digits. Try fewer digits (MMDD)!</div>`;
-    }
-  }
-}
-
-function deepSearchBirthday(query, target) {
-  const resultDiv = document.getElementById('birthdayResult');
-  resultDiv.innerHTML = `<div class="result-text result-ok">Computing ${target.toLocaleString()} digits...</div>`;
-  requestPiDigits(target, function() {
-    const currentQuery = document.getElementById('birthdayInput').value.replace(/\D/g, '');
-    if (currentQuery !== query) return;
-    searchBirthday();
-  });
 }
 
 // Frequency chart
